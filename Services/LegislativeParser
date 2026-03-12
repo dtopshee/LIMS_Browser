@@ -4,6 +4,15 @@ public class LegislativeParser
 
     public LegislativeNode ParseToTree(XElement root)
     {
+
+        if (root == null) throw new ArgumentNullException("The XML root is empty.");
+        
+        // Check for the lims namespace
+        XNamespace lims = "http://justice.gc.ca/lims";
+        if (root.Attribute(XNamespace.Xmlns + "lims") == null && root.Name.Namespace != lims)
+        {
+            throw new InvalidOperationException("Malformed Legislative XML: LIMS namespace missing.");
+        }
         var node = new LegislativeNode
         {
             ElementName = root.Name.LocalName,
