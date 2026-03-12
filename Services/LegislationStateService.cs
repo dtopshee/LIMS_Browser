@@ -1,14 +1,19 @@
-public class LegislationStateService
+namespace LegislationTimeMachine.Services
 {
-    public DateTime LeftDate { get; set; } = new DateTime(2003, 1, 1);
-    public DateTime RightDate { get; set; } = DateTime.Now;
 
-    public event Action OnChange;
-
-    public void UpdateTimeline(DateTime left, DateTime right)
+    public class LegislationStateService
     {
-        LeftDate = left;
-        RightDate = right;
-        OnChange?.Invoke();
+        public DateTime LeftDate { get; set; } = new DateTime(2003, 1, 1);
+        public DateTime RightDate { get; set; } = DateTime.Now;
+    
+        public event Action OnChange;
+    
+        public void UpdateTimeline(DateTime left, DateTime right)
+        {
+            LeftDate = left;
+            RightDate = right;
+            OnChange?.Invoke();
+        }
     }
+
 }
