@@ -1,0 +1,56 @@
+@page "/timeline"
+@inject LegislationStateService State
+@using LegislationTimeMachine.Models
+
+<div class="timeline-header">
+    <input type="range" min="2003" max="2026" @bind="State.LeftYear" />
+    <span>Comparing @State.LeftDate.ToShortDateString() to @State.RightDate.ToShortDateString()</span>
+</div>
+
+<div class="diff-container" style="display: flex; overflow-y: scroll; height: 80vh;">
+    @* Left Side: The "Before" snapshot *@
+    <div class="pane" style="flex: 1; border-right: 1px solid #ccc;">
+        <Virtualize Items="@LeftNodes" Context="node">
+            <div class="node-row @GetChangeClass(node.Fid)">
+                <strong>@node.Label</strong> @node.MarginalNote
+                <p>@node.Content</p>
+            </div>
+        </Virtualize>
+    </div>
+
+    @* Right Side: The "After" snapshot with highlighting *@
+    <div class="pane" style="flex: 1;">
+        <Virtualize Items="@RightNodes" Context="node">
+            <div class="node-row @GetChangeClass(node.Fid)">
+                <strong>@node.Label</strong> @node.MarginalNote
+                <p>@node.Content</p>
+                @if(IsModified(node.Fid)) {
+                    <span class="badge yellow">Modified</span>
+                }
+            </div>
+        </Virtualize>
+    </div>
+</div>
+
+@code {
+    private List<LegislativeNode> LeftNodes = new();
+    private List<LegislativeNode> RightNodes = new();
+    private Dictionary<string, LegislativeDelta> DiffResults = new();
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += StateHasChanged;
+        // Trigger the initial Parse and Diff logic here
+    }
+
+    private string GetChangeClass(string fid) 
+    {
+        if (!DiffResults.ContainsKey(fid)) return "unchanged";
+        return DiffResults[fid].Type switch {
+            ChangeType.Added => "diff-added",    // Green background
+            ChangeType.Removed => "diff-removed", // Strikethrough/Red
+            ChangeType.Modified => "diff-mod",    // Yellow highlight
+            _ => ""
+        };
+    }
+}
