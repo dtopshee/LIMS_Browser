@@ -1,55 +1,58 @@
-public class LegislativeParser
+namespace LegislationTimeMachine.Services
 {
-    private static readonly XNamespace lims = "http://justice.gc.ca/lims";
-
-    public LegislativeNode ParseToTree(XElement root)
+    public class LegislativeParser
     {
-
-        if (root == null) throw new ArgumentNullException("The XML root is empty.");
-        
-        // Check for the lims namespace
-        XNamespace lims = "http://justice.gc.ca/lims";
-        if (root.Attribute(XNamespace.Xmlns + "lims") == null && root.Name.Namespace != lims)
+        private static readonly XNamespace lims = "http://justice.gc.ca/lims";
+    
+        public LegislativeNode ParseToTree(XElement root)
         {
-            throw new InvalidOperationException("Malformed Legislative XML: LIMS namespace missing.");
-        }
-        var node = new LegislativeNode
-        {
-            ElementName = root.Name.LocalName,
-            Fid = root.Attribute(lims + "fid")?.Value,
-            VersionId = root.Attribute(lims + "id")?.Value,
-            Label = root.Element("Label")?.Value,
-            MarginalNote = root.Element("MarginalNote")?.Value,
-            Content = root.Element("Text")?.Value,
-            InForceDate = ParseLimsDate(root.Attribute(lims + "inforce-start-date")?.Value)
-        };
-
-        // Capture Historical Notes if they exist at this level
-        var hist = root.Element("HistoricalNote");
-        if (hist != null)
-        {
-            foreach (var item in hist.Elements("HistoricalNoteSubItem"))
-                node.HistoricalNotes.Add(item.Value);
-        }
-
-        // Recursively build children for nested structures
-        foreach (var childElement in root.Elements())
-        {
-            // We only care about versioned children for the 'Time Machine' logic
-            if (childElement.Attribute(lims + "fid") != null)
+    
+            if (root == null) throw new ArgumentNullException("The XML root is empty.");
+            
+            // Check for the lims namespace
+            XNamespace lims = "http://justice.gc.ca/lims";
+            if (root.Attribute(XNamespace.Xmlns + "lims") == null && root.Name.Namespace != lims)
             {
-                var childNode = ParseToTree(childElement);
-                childNode.Parent = node;
-                node.Children.Add(childNode);
+                throw new InvalidOperationException("Malformed Legislative XML: LIMS namespace missing.");
             }
+            var node = new LegislativeNode
+            {
+                ElementName = root.Name.LocalName,
+                Fid = root.Attribute(lims + "fid")?.Value,
+                VersionId = root.Attribute(lims + "id")?.Value,
+                Label = root.Element("Label")?.Value,
+                MarginalNote = root.Element("MarginalNote")?.Value,
+                Content = root.Element("Text")?.Value,
+                InForceDate = ParseLimsDate(root.Attribute(lims + "inforce-start-date")?.Value)
+            };
+    
+            // Capture Historical Notes if they exist at this level
+            var hist = root.Element("HistoricalNote");
+            if (hist != null)
+            {
+                foreach (var item in hist.Elements("HistoricalNoteSubItem"))
+                    node.HistoricalNotes.Add(item.Value);
+            }
+    
+            // Recursively build children for nested structures
+            foreach (var childElement in root.Elements())
+            {
+                // We only care about versioned children for the 'Time Machine' logic
+                if (childElement.Attribute(lims + "fid") != null)
+                {
+                    var childNode = ParseToTree(childElement);
+                    childNode.Parent = node;
+                    node.Children.Add(childNode);
+                }
+            }
+    
+            return node;
         }
-
-        return node;
-    }
-
-    private DateTime? ParseLimsDate(string dateStr)
-    {
-        if (DateTime.TryParse(dateStr, out DateTime dt)) return dt;
-        return null;
+    
+        private DateTime? ParseLimsDate(string dateStr)
+        {
+            if (DateTime.TryParse(dateStr, out DateTime dt)) return dt;
+            return null;
+        }
     }
 }
