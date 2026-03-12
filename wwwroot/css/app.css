@@ -1,0 +1,48 @@
+/* Container for the side-by-side view */
+.diff-container {
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    background-color: #f9f9f9;
+}
+
+/* Base class for a versioned element */
+.node-row {
+    padding: 8px 15px;
+    margin-bottom: 2px;
+    border-left: 4px solid transparent;
+    transition: background-color 0.2s;
+}
+
+/* The "Structural Change" highlight you noted */
+.diff-mod { 
+    background-color: #fff9c4; /* Soft Yellow */
+    border-left-color: #fbc02d; 
+}
+
+.diff-added { 
+    background-color: #e8f5e9; /* Soft Green */
+    border-left-color: #4caf50; 
+}
+
+.diff-removed { 
+    background-color: #ffebee; /* Soft Red */
+    border-left-color: #f44336;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* Recursive Indentation Logic based on Schema Depth */
+.element-Section { padding-left: 15px; font-weight: bold; }
+.element-Subsection { padding-left: 40px; border-top: 1px solid #eee; }
+.element-Paragraph { padding-left: 70px; font-size: 0.95em; }
+.element-Subparagraph { padding-left: 100px; font-style: italic; }
+
+/* The Marginal Note (Side-note style) */
+.marginal-note {
+    display: block;
+    font-size: 0.8em;
+    color: #555;
+    font-weight: normal;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
