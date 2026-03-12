@@ -61,21 +61,24 @@
     private List<LegislativeNode> RightNodes = new();
     private Dictionary<string, LegislativeDelta> DiffResults = new();
 
-    protected override void OnInitialized()
-    {
-        // Subscribe to state changes so the UI refreshes when the slider moves
-        State.OnChange += async () => await RefreshData();
-        
-        // Initial load logic would go here
-        // For now, initializing with empty lists to prevent null errors
-    }
+protected override async Task OnInitializedAsync()
+{
+    // Subscribe to state changes
+    State.OnChange += async () => await RefreshData();
+    
+    // Load the mock data immediately
+    LoadMockData(); 
+}
 
-    private async Task RefreshData()
-    {
-        // This is where you would trigger the LegislativeParser.ParseToTree()
-        // for the selected year and the current year.
-        StateHasChanged();
-    }
+private async Task RefreshData()
+{
+    // In a real scenario, this would fetch different files.
+    // For the mock, we just re-run the hardcoded logic.
+    LoadMockData();
+    
+    await Task.CompletedTask;
+    StateHasChanged();
+}
 
     private bool IsModified(string fid)
     {
@@ -102,6 +105,10 @@
 
 private void LoadMockData()
 {
+
+        LeftNodes.Clear();
+    RightNodes.Clear();
+    DiffResults.Clear();
     // Snapshot A: 2005 (Simple Section)
     var sectionOld = new LegislativeNode {
         Fid = "12345",
