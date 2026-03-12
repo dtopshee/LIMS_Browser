@@ -1,31 +1,55 @@
 @page "/timeline"
-@inject LegislationStateService State
+@inject LegislationTimeMachine.Services.LegislationStateService State
 @using LegislationTimeMachine.Models
+@using LegislationTimeMachine.Services
 
-<div class="timeline-header">
-    <input type="range" min="2003" max="2026" @bind="State.LeftYear" />
-    <span>Comparing @State.LeftDate.ToShortDateString() to @State.RightDate.ToShortDateString()</span>
+<div class="timeline-header" style="padding: 20px; background: #eee; border-bottom: 1px solid #ccc;">
+    <div class="slider-controls">
+        <label>Historical Snapshot (Year): @State.LeftYear</label>
+        <input type="range" min="2003" max="2026" @bind-value="State.LeftYear" @bind-value:event="oninput" style="width: 100%;" />
+    </div>
+    <div class="metadata">
+        <span>Comparing <strong>@State.LeftDate.ToShortDateString()</strong> to <strong>Current Laws</strong></span>
+    </div>
 </div>
 
-<div class="diff-container" style="display: flex; overflow-y: scroll; height: 80vh;">
-    @* Left Side: The "Before" snapshot *@
-    <div class="pane" style="flex: 1; border-right: 1px solid #ccc;">
-        <Virtualize Items="@LeftNodes" Context="node">
-            <div class="node-row @GetChangeClass(node.Fid)" data-fid="@node.Fid">
-                <strong>@node.Label</strong> @node.MarginalNote
-                <p>@node.Content</p>
+<div class="diff-container" style="display: flex; height: 80vh; overflow: hidden; background: white;">
+    
+    @* Left Pane: Historical View *@
+    <div class="pane" id="leftPane" style="flex: 1; overflow-y: auto; border-right: 2px solid #ddd;">
+        <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Archive: @State.LeftYear</h3>
+        <Virtualize Items="@LeftNodes" Context="historicalNode">
+            <div class="node-row element-@historicalNode.ElementName @GetChangeClass(historicalNode.Fid)" data-fid="@historicalNode.Fid">
+                @if (!string.IsNullOrEmpty(historicalNode.MarginalNote))
+                {
+                    <span class="marginal-note">@historicalNode.MarginalNote</span>
+                }
+                <span class="node-label">@historicalNode.Label</span>
+                <span class="node-text">@historicalNode.Content</span>
+                
+                @if (historicalNode.Children.Any() && string.IsNullOrEmpty(historicalNode.Content))
+                {
+                    <div class="structural-info"><em>Structure: Subsections exist.</em></div>
+                }
             </div>
         </Virtualize>
     </div>
 
-    @* Right Side: The "After" snapshot with highlighting *@
-    <div class="pane" style="flex: 1;">
-        <Virtualize Items="@RightNodes" Context="node">
-            <div class="node-row @GetChangeClass(node.Fid)" data-fid="@node.Fid">
-                <strong>@node.Label</strong> @node.MarginalNote
-                <p>@node.Content</p>
-                @if(IsModified(node.Fid)) {
-                    <span class="badge yellow">Modified</span>
+    @* Right Pane: Current View *@
+    <div class="pane" id="rightPane" style="flex: 1; overflow-y: auto;">
+        <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Current Legislation</h3>
+        <Virtualize Items="@RightNodes" Context="currentNode">
+            <div class="node-row element-@currentNode.ElementName @GetChangeClass(currentNode.Fid)" data-fid="@currentNode.Fid">
+                @if (!string.IsNullOrEmpty(currentNode.MarginalNote))
+                {
+                    <span class="marginal-note">@currentNode.MarginalNote</span>
+                }
+                <span class="node-label">@currentNode.Label</span>
+                <span class="node-text">@currentNode.Content</span>
+
+                @if (IsModified(currentNode.Fid))
+                {
+                    <span class="badge" style="background: #fbc02d; font-size: 0.7em; padding: 2px 5px; border-radius: 4px;">Modified</span>
                 }
             </div>
         </Virtualize>
@@ -39,47 +63,40 @@
 
     protected override void OnInitialized()
     {
-        State.OnChange += StateHasChanged;
-        // Trigger the initial Parse and Diff logic here
+        // Subscribe to state changes so the UI refreshes when the slider moves
+        State.OnChange += async () => await RefreshData();
+        
+        // Initial load logic would go here
+        // For now, initializing with empty lists to prevent null errors
+    }
+
+    private async Task RefreshData()
+    {
+        // This is where you would trigger the LegislativeParser.ParseToTree()
+        // for the selected year and the current year.
+        StateHasChanged();
+    }
+
+    private bool IsModified(string fid)
+    {
+        if (string.IsNullOrEmpty(fid)) return false;
+        return DiffResults.TryGetValue(fid, out var delta) && delta.Type == ChangeType.Modified;
     }
 
     private string GetChangeClass(string fid) 
     {
-        if (!DiffResults.ContainsKey(fid)) return "unchanged";
+        if (string.IsNullOrEmpty(fid) || !DiffResults.ContainsKey(fid)) return "unchanged";
+        
         return DiffResults[fid].Type switch {
-            ChangeType.Added => "diff-added",    // Green background
-            ChangeType.Removed => "diff-removed", // Strikethrough/Red
-            ChangeType.Modified => "diff-mod",    // Yellow highlight
-            _ => ""
+            ChangeType.Added => "diff-added",
+            ChangeType.Removed => "diff-removed",
+            ChangeType.Modified => "diff-mod",
+            _ => "unchanged"
         };
     }
-}
 
-@if (node.Children.Any() && string.IsNullOrEmpty(node.Content))
-{
-    @* The Section has become a container for Subsections *@
-    <div class="structural-transform-alert">
-        <small><em>Historical Transformation: Content moved to Subsections.</em></small>
-    </div>
-    @foreach (var sub in node.Children)
+    public void Dispose()
     {
-        <SubsectionComponent Node="sub" />
+        State.OnChange -= StateHasChanged;
     }
 }
-
-// Add to your wwwroot/js/scroll-sync.js
-window.syncScrollByFid = (sourceId, targetId) => {
-    const sourcePane = document.getElementById(sourceId);
-    const targetPane = document.getElementById(targetId);
-
-    sourcePane.onscroll = () => {
-        // Find the FID of the top-most visible element in the source
-        const topFid = getVisibleFid(sourcePane);
-        if (topFid) {
-            const targetElement = targetPane.querySelector(`[data-fid="${topFid}"]`);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-            }
-        }
-    };
-};
