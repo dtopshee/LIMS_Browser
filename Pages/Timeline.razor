@@ -54,3 +54,20 @@
         };
     }
 }
+
+// Add to your wwwroot/js/scroll-sync.js
+window.syncScrollByFid = (sourceId, targetId) => {
+    const sourcePane = document.getElementById(sourceId);
+    const targetPane = document.getElementById(targetId);
+
+    sourcePane.onscroll = () => {
+        // Find the FID of the top-most visible element in the source
+        const topFid = getVisibleFid(sourcePane);
+        if (topFid) {
+            const targetElement = targetPane.querySelector(`[data-fid="${topFid}"]`);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }
+        }
+    };
+};
