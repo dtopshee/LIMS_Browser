@@ -55,6 +55,18 @@
     }
 }
 
+@if (node.Children.Any() && string.IsNullOrEmpty(node.Content))
+{
+    @* The Section has become a container for Subsections *@
+    <div class="structural-transform-alert">
+        <small><em>Historical Transformation: Content moved to Subsections.</em></small>
+    </div>
+    @foreach (var sub in node.Children)
+    {
+        <SubsectionComponent Node="sub" />
+    }
+}
+
 // Add to your wwwroot/js/scroll-sync.js
 window.syncScrollByFid = (sourceId, targetId) => {
     const sourcePane = document.getElementById(sourceId);
