@@ -11,7 +11,7 @@
     @* Left Side: The "Before" snapshot *@
     <div class="pane" style="flex: 1; border-right: 1px solid #ccc;">
         <Virtualize Items="@LeftNodes" Context="node">
-            <div class="node-row @GetChangeClass(node.Fid)">
+            <div class="node-row @GetChangeClass(node.Fid)" data-fid="@node.Fid">
                 <strong>@node.Label</strong> @node.MarginalNote
                 <p>@node.Content</p>
             </div>
@@ -21,7 +21,7 @@
     @* Right Side: The "After" snapshot with highlighting *@
     <div class="pane" style="flex: 1;">
         <Virtualize Items="@RightNodes" Context="node">
-            <div class="node-row @GetChangeClass(node.Fid)">
+            <div class="node-row @GetChangeClass(node.Fid)" data-fid="@node.Fid">
                 <strong>@node.Label</strong> @node.MarginalNote
                 <p>@node.Content</p>
                 @if(IsModified(node.Fid)) {
