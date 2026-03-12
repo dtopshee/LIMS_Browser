@@ -99,4 +99,48 @@
     {
         State.OnChange -= StateHasChanged;
     }
+
+private void LoadMockData()
+{
+    // Snapshot A: 2005 (Simple Section)
+    var sectionOld = new LegislativeNode {
+        Fid = "12345",
+        Label = "3.1",
+        MarginalNote = "INTERPRETATION",
+        Content = "This section is a single sentence defining the scope of the Act.",
+        ElementName = "Section"
+    };
+    LeftNodes = new List<LegislativeNode> { sectionOld };
+
+    // Snapshot B: 2026 (The "Split" you identified)
+    var sectionNew = new LegislativeNode {
+        Fid = "12345", // Same FID
+        Label = "3.1",
+        MarginalNote = "INTERPRETATION",
+        ElementName = "Section",
+        Children = new List<LegislativeNode> {
+            new LegislativeNode { 
+                Fid = "12345-1", 
+                Label = "(1)", 
+                Content = "This section is a single sentence defining the scope of the Act.",
+                ElementName = "Subsection" 
+            },
+            new LegislativeNode { 
+                Fid = "67890", 
+                Label = "(2)", 
+                Content = "This is a brand new subsection added by an amending formula.",
+                ElementName = "Subsection" 
+            }
+        }
+    };
+    RightNodes = new List<LegislativeNode> { sectionNew };
+
+    // Mark it as Modified in the Diff Engine
+    DiffResults["12345"] = new LegislativeDelta {
+        Fid = "12345",
+        Type = ChangeType.Modified,
+        OldVersion = sectionOld,
+        NewVersion = sectionNew
+    };
+}
 }
