@@ -52,53 +52,5 @@ namespace LegislationTimeMachine.Models
         public LegislativeNode NewVersion { get; set; }
     }
 
-
-public class LegislativeParser
-{
-    private static readonly XNamespace lims = "http://justice.gc.ca/lims";
-
-    public LegislativeNode ParseToTree(XElement root)
-    {
-        var node = new LegislativeNode
-        {
-            ElementName = root.Name.LocalName,
-            Fid = root.Attribute(lims + "fid")?.Value,
-            VersionId = root.Attribute(lims + "id")?.Value,
-            Label = root.Element("Label")?.Value,
-            MarginalNote = root.Element("MarginalNote")?.Value,
-            Content = root.Element("Text")?.Value,
-            InForceDate = ParseLimsDate(root.Attribute(lims + "inforce-start-date")?.Value)
-        };
-
-        // Capture Historical Notes if they exist at this level
-        var hist = root.Element("HistoricalNote");
-        if (hist != null)
-        {
-            foreach (var item in hist.Elements("HistoricalNoteSubItem"))
-                node.HistoricalNotes.Add(item.Value);
-        }
-
-        // Recursively build children for nested structures
-        foreach (var childElement in root.Elements())
-        {
-            // We only care about versioned children for the 'Time Machine' logic
-            if (childElement.Attribute(lims + "fid") != null)
-            {
-                var childNode = ParseToTree(childElement);
-                childNode.Parent = node;
-                node.Children.Add(childNode);
-            }
-        }
-
-        return node;
-    }
-
-    private DateTime? ParseLimsDate(string dateStr)
-    {
-        if (DateTime.TryParse(dateStr, out DateTime dt)) return dt;
-        return null;
-    }
-}
-
-  
+ 
 }
