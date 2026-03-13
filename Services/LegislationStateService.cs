@@ -41,7 +41,8 @@ namespace LegislationTimeMachine.Services
             try
             {
                 // Ensure this matches your filename in wwwroot/data/
-                var xmlString = await _http.GetStringAsync("data/criminal-code-recent.xml");
+                //var xmlString = await _http.GetStringAsync("data/criminal-code-recent.xml");
+                var xmlString = await _http.GetStringAsync("data/P-21.xml");
                 var doc = XDocument.Parse(xmlString);
 
                 var parser = new LegislationParser();
