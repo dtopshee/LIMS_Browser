@@ -1,25 +1,35 @@
 window.syncScroll = {
     init: function (leftId, rightId) {
-        const leftPane = document.getElementById(leftId);
-        const rightPane = document.getElementById(rightId);
+        const left = document.getElementById(leftId);
+        const right = document.getElementById(rightId);
 
         const sync = (source, target) => {
-            // Find the element currently at the top of the source pane
-            const topElement = document.elementFromPoint(
-                source.getBoundingClientRect().left + 10, 
-                source.getBoundingClientRect().top + 50
+            // 1. Check if we are at the very top
+            if (source.scrollTop <= 5) {
+                target.scrollTo({ top: 0, behavior: 'auto' });
+                return;
+            }
+
+            // 2. Find the FID at the top of the current view
+            const topEl = document.elementFromPoint(
+                source.getBoundingClientRect().left + 20, 
+                source.getBoundingClientRect().top + 60
             );
+
+            const fid = topEl?.closest('[data-fid]')?.getAttribute('data-fid');
             
-            const fid = topElement?.closest('[data-fid]')?.getAttribute('data-fid');
-            if (fid) {
-                const targetElement = target.querySelector(`[data-fid="${fid}"]`);
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+            if (fid === "TOP") {
+                target.scrollTo({ top: 0, behavior: 'auto' });
+            } else if (fid) {
+                const match = target.querySelector(`[data-fid="${fid}"]`);
+                if (match) {
+                    // Align the target element to the top of the pane
+                    target.scrollTop = match.offsetTop - target.offsetTop;
                 }
             }
         };
 
-        leftPane.onscroll = () => sync(leftPane, rightPane);
-        // Optional: rightPane.onscroll = () => sync(rightPane, leftPane);
+        left.onscroll = () => sync(left, right);
+        right.onscroll = () => sync(right, left);
     }
 };
