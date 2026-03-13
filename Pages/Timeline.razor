@@ -63,11 +63,15 @@
 
 protected override async Task OnInitializedAsync()
 {
-    // Subscribe to state changes
-    State.OnChange += async () => await RefreshData();
+    State.OnChange += StateHasChanged;
     
-    // Load the mock data immediately
-    LoadMockData(); 
+    // If for some reason it's not loaded yet, load it now
+    if (!State.MasterNodes.Any())
+    {
+        await State.InitializeAsync();
+    }
+
+    await RefreshData();
 }
 
 private async Task RefreshData()
