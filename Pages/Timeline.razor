@@ -152,19 +152,39 @@ protected override async Task OnAfterRenderAsync(bool firstRender)
         await JS.InvokeVoidAsync("syncScroll.init", "leftPane", "rightPane");
     }
 }
-RenderFragment RenderNode(LegislativeNode node) => __builder =>
+
+    RenderFragment RenderNode(LegislativeNode node) => __builder =>
     {
-        <div class="node-row element-@node.ElementName @GetChangeClass(node.Fid)" data-fid="@node.Fid" style="margin-left: @(GetIndent(node.ElementName))px;">
+        // Use the FID to get the CSS class (diff-added, diff-mod, etc.)
+        var changeClass = GetChangeClass(node.Fid);
+
+        <div class="node-row element-@node.ElementName @changeClass" 
+             data-fid="@node.Fid" 
+             style="margin-left: @(GetIndent(node.ElementName))px; padding: 5px; border-bottom: 1px solid #eee;">
+            
             @if (!string.IsNullOrEmpty(node.MarginalNote))
             {
-                <div class="marginal-note">@node.MarginalNote</div>
+                <div class="marginal-note" style="font-weight: bold; color: #555; font-size: 0.85em; margin-bottom: 2px;">
+                    @node.MarginalNote
+                </div>
             }
-            <span class="node-label">@node.Label</span>
-            <span class="node-text">@node.Content</span>
 
-            @if (node.Children.Any())
+            <div style="display: flex; gap: 10px;">
+                <span class="node-label" style="font-weight: bold; min-width: 30px;">@node.Label</span>
+                <span class="node-text">@node.Content</span>
+                
+                @* Add the 'Modified' badge only if it's actually modified *@
+                @if (changeClass == "diff-mod")
+                {
+                    <span class="badge" style="background: #fbc02d; color: black; font-size: 0.7em; padding: 2px 5px; border-radius: 4px; height: fit-content;">
+                        Modified
+                    </span>
+                }
+            </div>
+
+            @if (node.Children != null && node.Children.Any())
             {
-                <div class="children">
+                <div class="node-children">
                     @foreach (var child in node.Children)
                     {
                         @RenderNode(child)
