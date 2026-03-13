@@ -16,4 +16,11 @@ builder.Services.AddScoped(sp => new HttpClient {
 // Register the State Service for the Timeline
 builder.Services.AddSingleton<LegislationStateService>();
 
-await builder.Build().RunAsync();
+//await builder.Build().RunAsync();
+
+var host = builder.Build();
+
+var stateService = host.Services.GetRequiredService<LegislationStateService>();
+await stateService.InitializeAsync();
+
+await host.RunAsync();
