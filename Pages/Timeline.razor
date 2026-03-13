@@ -28,20 +28,9 @@
     <div class="pane" id="rightPane" style="flex: 1; overflow-y: auto;">
         <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Current Legislation</h3>
         <Virtualize Items="@RightNodes" Context="currentNode">
-            <div class="node-row element-@currentNode.ElementName @GetChangeClass(currentNode.Fid)" data-fid="@currentNode.Fid">
-                @if (!string.IsNullOrEmpty(currentNode.MarginalNote))
-                {
-                    <span class="marginal-note">@currentNode.MarginalNote</span>
-                }
-                <span class="node-label">@currentNode.Label</span>
-                <span class="node-text">@currentNode.Content</span>
-
-                @if (IsModified(currentNode.Fid))
-                {
-                    <span class="badge" style="background: #fbc02d; font-size: 0.7em; padding: 2px 5px; border-radius: 4px;">Modified</span>
-                }
-            </div>
-        </Virtualize>
+        @* This ensures the Right Side also gets the Indents and Recursive Children *@
+        @RenderNode(currentNode)
+    </Virtualize>
     </div>
 </div>
 
