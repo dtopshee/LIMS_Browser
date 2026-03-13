@@ -14,6 +14,7 @@ namespace LegislationTimeMachine.Models
         public string VersionId { get; set; }     // Point-in-time specific ID (lims:id)
         public DateTime? InForceDate { get; set; } // lims:inforce-start-date
         public DateTime? EnactedDate { get; set; } // lims:enacted-date
+        public DateTime? RepealDate { get; set; } // 
         
         // Structural properties
         public string ElementName { get; set; }   // Section, Subsection, Paragraph, etc.
