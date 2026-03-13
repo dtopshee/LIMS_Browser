@@ -46,3 +46,28 @@
     margin-bottom: 4px;
     text-transform: uppercase;
 }
+
+.node-row {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.3s;
+}
+
+/* Green for newly added sections */
+.diff-added {
+    background-color: #e6ffed !important;
+    border-left: 4px solid #28a745;
+}
+
+/* Red for sections that didn't exist in that year */
+.diff-removed {
+    background-color: #ffeef0 !important;
+    border-left: 4px solid #d73a49;
+    text-decoration: line-through;
+}
+
+/* Yellow for modified text or renumbered sections */
+.diff-mod {
+    background-color: #fffdef !important;
+    border-left: 4px solid #fbc02d;
+}
