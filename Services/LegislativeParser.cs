@@ -15,39 +15,49 @@ namespace LegislationTimeMachine.Services
         }
 
         private List<LegislativeNode> ParseLevel(IEnumerable<XElement> elements)
+{
+    var nodes = new List<LegislativeNode>();
+    XNamespace lims = "http://justice.gc.ca/lims";
+
+    foreach (var el in elements)
+    {
+        string localName = el.Name.LocalName;
+
+        // Skip data-only elements so we only loop through structural containers
+        if (localName == "Label" || localName == "Text" || localName == "MarginalNote") 
+            continue;
+
+        var node = new LegislativeNode
         {
-            var nodes = new List<LegislativeNode>();
-            XNamespace lims = "http://justice.gc.ca/lims";
-        
-            foreach (var el in elements)
-            {
-                // Don't skip these—we need to extract their values below
-                var elementName = el.Name.LocalName;
-                if (elementName == "Label" || elementName == "Text" || elementName == "MarginalNote") 
-                    continue;
-        
-                var node = new LegislativeNode
-                {
-                    Fid = el.Attribute(lims + "fid")?.Value ?? el.Attribute(lims + "id")?.Value,
-                    ElementName = elementName,
-                    Label = el.Element("Label")?.Value,
-                    MarginalNote = el.Element("MarginalNote")?.Value, // This is the fix for the notes
-                    Content = el.Element("Text")?.Value,
-                    
-                    // Capture the dates for Time Travel
-                    InForceDate = DateTime.TryParse(el.Attribute(lims + "inforce-start-date")?.Value, out var start) ? start : StatuteBaseline,
-                    RepealDate = DateTime.TryParse(el.Attribute(lims + "inforce-end-date")?.Value, out var end) ? end : (DateTime?)null
-                };
-        
-                if (el.Elements().Any())
-                {
-                    node.Children = ParseLevel(el.Elements());
-                }
-        
-                nodes.Add(node);
-            }
-            return nodes;
+            Fid = el.Attribute(lims + "fid")?.Value ?? el.Attribute(lims + "id")?.Value,
+            ElementName = localName,
+            Label = el.Element("Label")?.Value,
+            
+            // Capture MarginalNote whether it's at Section or Subsection level
+            MarginalNote = el.Element("MarginalNote")?.Value,
+            
+            Content = el.Element("Text")?.Value,
+
+            // --- TIME TRAVEL DATA ---
+            // Capture Start Date
+            InForceDate = DateTime.TryParse(el.Attribute(lims + "inforce-start-date")?.Value, out var start) 
+                          ? start : StatuteBaseline,
+            
+            // Capture Repeal Date (End Date)
+            RepealDate = DateTime.TryParse(el.Attribute(lims + "inforce-end-date")?.Value, out var end) 
+                         ? end : (DateTime?)null
+        };
+
+        // Recursively build the tree
+        if (el.Elements().Any())
+        {
+            node.Children = ParseLevel(el.Elements());
         }
+
+        nodes.Add(node);
+    }
+    return nodes;
+}
 
         public static List<LegislativeNode> GetVersionAtDate(List<LegislativeNode> masterNodes, int targetYear)
         {
