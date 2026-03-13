@@ -194,36 +194,23 @@ protected override async Task OnAfterRenderAsync(bool firstRender)
     }
 }
 
-    RenderFragment RenderNode(LegislativeNode node) => __builder =>
+RenderFragment RenderNode(LegislativeNode node) => __builder =>
     {
-        var isRepealed = node.RepealDate.HasValue && node.RepealDate.Value <= State.LeftDate;
         var changeClass = GetChangeClass(node.Fid);
 
-        <div class="node-row @(isRepealed ? "diff-removed" : changeClass)" 
-             data-fid="@node.Fid" 
-             style="margin-left: @(GetIndent(node.ElementName))px;">
+        <div class="node-row @changeClass" data-fid="@node.Fid" 
+             style="margin-left: @(GetIndent(node.ElementName))px; padding: 8px 0;">
             
-            @* Fix: Marginal Note Display *@
             @if (!string.IsNullOrEmpty(node.MarginalNote))
             {
-                <div class="marginal-note" style="color: #2c3e50; font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 5px;">
+                <div class="marginal-note" style="color: #003366; font-size: 0.75rem; font-weight: bold; font-style: italic; margin-bottom: 2px;">
                     @node.MarginalNote
                 </div>
             }
 
-            <div style="display: flex; gap: 8px;">
-                <span class="node-label" style="font-weight: bold;">@node.Label</span>
-                
-                @if (isRepealed)
-                {
-                    <span class="repeal-text" style="color: #d73a49; font-style: italic;">
-                        [Repealed @node.RepealDate.Value.Year]
-                    </span>
-                }
-                else
-                {
-                    <span class="node-text">@node.Content</span>
-                }
+            <div style="display: flex; gap: 10px;">
+                <span class="node-label" style="font-weight: bold; min-width: 35px;">@node.Label</span>
+                <span class="node-text">@node.Content</span>
             </div>
 
             @if (node.Children.Any())
