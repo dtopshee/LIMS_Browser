@@ -61,4 +61,47 @@ namespace LegislationTimeMachine.Services
 
         private void NotifyStateChanged() => OnChange?.Invoke();
     }
+
+    public List<LegislationFileInfo> AvailableActs { get; private set; } = new();
+public string CurrentActTitle { get; private set; } = "Select Legislation";
+
+public async Task LoadAvailableActsAsync()
+{
+    var fileNames = await _http.GetFromJsonAsync<List<string>>("data/manifest.json");
+    AvailableActs.Clear();
+
+    foreach (var name in fileNames ?? new())
+    {
+        // For a quick scan, we just use the name; we can extract ShortTitle later
+        AvailableActs.Add(new LegislationFileInfo { FileName = name, ShortTitle = name.Replace(".xml", "") });
+    }
+    NotifyStateChanged();
+}
+
+public async Task LoadNewActAsync(string fileName)
+{
+    IsLoading = true;
+    NotifyStateChanged();
+
+    try
+    {
+        var xmlString = await _http.GetStringAsync($"data/{fileName}");
+        var doc = XDocument.Parse(xmlString);
+        
+        // Extract the actual ShortTitle from the XML for the UI
+        CurrentActTitle = doc.Descendants("ShortTitle").FirstOrDefault()?.Value ?? fileName;
+
+        var parser = new LegislationParser();
+        MasterNodes = parser.ParseToTree(doc);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error switching acts: {ex.Message}");
+    }
+    finally
+    {
+        IsLoading = false;
+        NotifyStateChanged();
+    }
+}
 }
