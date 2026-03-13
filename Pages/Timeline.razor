@@ -18,19 +18,22 @@
     
     @* Left Pane: Historical View *@
     <div class="pane" id="leftPane" style="flex: 1; overflow-y: auto; border-right: 2px solid #ddd;">
-        <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Archive: @State.LeftYear</h3>
+        <h3 style="padding: 10px; background: #f4f4f4; margin: 0; position: sticky; top: 0; z-index: 10;">
+            Archive: @State.LeftYear
+        </h3>
         <Virtualize Items="@LeftNodes" Context="historicalNode">
-@RenderNode(historicalNode)
+            @RenderNode(historicalNode)
         </Virtualize>
     </div>
 
     @* Right Pane: Current View *@
     <div class="pane" id="rightPane" style="flex: 1; overflow-y: auto;">
-        <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Current Legislation</h3>
+        <h3 style="padding: 10px; background: #f4f4f4; margin: 0; position: sticky; top: 0; z-index: 10;">
+            Current Legislation
+        </h3>
         <Virtualize Items="@RightNodes" Context="currentNode">
-        @* This ensures the Right Side also gets the Indents and Recursive Children *@
-        @RenderNode(currentNode)
-    </Virtualize>
+            @RenderNode(currentNode)
+        </Virtualize>
     </div>
 </div>
 
@@ -194,10 +197,13 @@ protected override async Task OnAfterRenderAsync(bool firstRender)
         </div>
     };
 
-    private int GetIndent(string name) => name switch {
-        "Subsection" => 20,
-        "Paragraph" => 40,
-        "Clause" => 60,
-        _ => 0
-    };
+private int GetIndent(string? elementName) => elementName switch
+{
+    "Section" => 0,
+    "Subsection" => 25,
+    "Paragraph" => 50,
+    "Subparagraph" => 75,
+    "Clause" => 100,
+    _ => 0
+};
 }
