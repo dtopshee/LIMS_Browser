@@ -3,7 +3,36 @@ namespace LegislationTimeMachine.Services
     public class LegislativeParser
     {
         private static readonly XNamespace lims = "http://justice.gc.ca/lims";
-    
+
+public static List<LegislativeNode> GetVersionAtDate(List<LegislativeNode> masterNodes, int targetYear)
+{
+    var filtered = new List<LegislativeNode>();
+    var targetDate = new DateTime(targetYear, 12, 31);
+
+    foreach (var node in masterNodes)
+    {
+        // Check if the node existed during the target year
+        if (node.InForceDate <= targetDate)
+        {
+            // Clone the node to avoid modifying the master list
+            var clone = new LegislativeNode {
+                Fid = node.Fid,
+                Label = node.Label,
+                Content = node.Content,
+                ElementName = node.ElementName,
+                InForceDate = node.InForceDate
+            };
+
+            // Recursively filter children (subsections, paragraphs)
+            clone.Children = GetVersionAtDate(node.Children, targetYear);
+            
+            filtered.Add(clone);
+        }
+    }
+    return filtered;
+}
+
+
         public LegislativeNode ParseToTree(XElement root)
         {
     
