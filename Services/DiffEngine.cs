@@ -30,9 +30,9 @@ namespace LegislationTimeMachine.Services
             // Check for removals
             foreach (var oldNode in oldFlat)
             {
-                if (!newFlat.ContainsKey(oldNode.Key))
+                if (newNode.Value.RepealDate.HasValue && newNode.Value.RepealDate <= targetDate)
                 {
-                    results[oldNode.Key] = new LegislativeDelta { Fid = oldNode.Key, Type = ChangeType.Removed };
+                    results[newNode.Key] = new LegislativeDelta { Fid = newNode.Key, Type = ChangeType.Removed };
                 }
             }
 
