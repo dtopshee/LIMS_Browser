@@ -39,18 +39,29 @@
 
 /* The Marginal Note (Side-note style) */
 .marginal-note {
-    display: block;
-    font-size: 0.8em;
-    color: #555;
-    font-weight: normal;
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 0.85rem;
     margin-bottom: 4px;
-    text-transform: uppercase;
+    display: block;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 2px;
 }
 
 .node-row {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.3s;
+    padding: 10px;
+    border-bottom: 1px dotted #ccc;
+}
+
+.node-label {
+    font-family: "Courier New", Courier, monospace;
+    font-weight: bold;
+    color: #444;
+    margin-right: 10px;
+}
+
+.node-text {
+    line-height: 1.5;
 }
 
 /* Green for newly added sections */
