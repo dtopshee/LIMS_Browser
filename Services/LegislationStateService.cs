@@ -12,14 +12,14 @@ namespace LegislationTimeMachine.Services
         public DateTime LeftDate { get; set; } = new DateTime(2003, 1, 1);
         public DateTime RightDate { get; set; } = DateTime.Now;
 
+        private int _leftYear = 2003;
         public int LeftYear 
         { 
-            get => LeftDate.Year; 
-            // We use the setter to trigger the refresh across the app
+            get => _leftYear; 
             set {
-                if (LeftDate.Year != value) {
-                    LeftDate = new DateTime(value, 1, 1);
-                    NotifyStateChanged();
+                if (_leftYear != value) {
+                    _leftYear = value;
+                    NotifyStateChanged(); // This "pings" the Timeline.razor page
                 }
             }
         }
