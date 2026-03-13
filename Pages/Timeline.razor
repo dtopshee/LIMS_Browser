@@ -4,6 +4,25 @@
 @using LegislationTimeMachine.Models
 @using LegislationTimeMachine.Services
 
+@if (!State.IsLoading && State.MasterNodes.Any())
+{
+    <div class="stats-bar" style="display: flex; gap: 20px; padding: 10px 20px; background: #f8f9fa; border-bottom: 1px solid #ddd; font-family: sans-serif; font-size: 0.9em;">
+        <span style="color: #666;">Analysis of <strong>@State.CurrentActTitle</strong> (@State.LeftYear vs. Current):</span>
+        
+        <span title="Added since @State.LeftYear">
+            <strong style="color: #28a745;">● @AddedCount</strong> Added
+        </span>
+        
+        <span title="Modified since @State.LeftYear">
+            <strong style="color: #fbc02d;">● @ModifiedCount</strong> Modified
+        </span>
+        
+        <span title="Repealed or removed since @State.LeftYear">
+            <strong style="color: #d73a49;">● @RemovedCount</strong> Repealed/Removed
+        </span>
+    </div>
+}
+
 <div class="act-selector" style="padding: 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; align-items: center; gap: 20px;">
     <strong>Active Act:</strong>
     <select class="form-select" @onchange="OnActSelected" style="padding: 5px; border-radius: 4px;">
@@ -78,19 +97,24 @@ protected override void OnInitialized()
     State.OnChange += async () => await RefreshData();
 }
 
-private async Task RefreshData()
-{
-    // Re-filter the MasterNodes based on the NEW year
-    LeftNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, State.LeftYear);
-    
-    // Always compare against the latest (2026)
-    RightNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, 2026);
+private int AddedCount { get; set; }
+    private int ModifiedCount { get; set; }
+    private int RemovedCount { get; set; }
 
-    // Re-run the DiffEngine to update the Green/Red/Yellow highlights
-    DiffResults = DiffEngine.Compare(LeftNodes, RightNodes);
+    private async Task RefreshData()
+    {
+        // ... existing filtering and diffing code ...
+        LeftNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, State.LeftYear);
+        RightNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, 2026);
+        DiffResults = DiffEngine.Compare(LeftNodes, RightNodes);
 
-    StateHasChanged(); // Force the HTML to redraw
-}
+        // Calculate Stats based on the DiffResults dictionary
+        AddedCount = DiffResults.Values.Count(d => d.Type == ChangeType.Added);
+        ModifiedCount = DiffResults.Values.Count(d => d.Type == ChangeType.Modified);
+        RemovedCount = DiffResults.Values.Count(d => d.Type == ChangeType.Removed);
+
+        StateHasChanged();
+    }
 
     private bool IsModified(string fid)
     {
