@@ -44,13 +44,5 @@ namespace LegislationTimeMachine.Models
     /// </summary>
     public enum ChangeType { Added, Modified, Removed, Unchanged }
 
-    public class LegislativeDelta
-    {
-        public string Fid { get; set; }
-        public ChangeType Type { get; set; }
-        public LegislativeNode OldVersion { get; set; }
-        public LegislativeNode NewVersion { get; set; }
-    }
-
  
 }
