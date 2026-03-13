@@ -4,14 +4,14 @@
 @using LegislationTimeMachine.Models
 @using LegislationTimeMachine.Services
 
-<div class="timeline-header" style="padding: 20px; background: #eee; border-bottom: 1px solid #ccc;">
-    <div class="slider-controls">
-        <label>Historical Snapshot (Year): @State.LeftYear</label>
-        <input type="range" min="2003" max="2026" @bind-value="State.LeftYear" @bind-value:event="oninput" style="width: 100%;" />
-    </div>
-    <div class="metadata">
-        <span>Comparing <strong>@State.LeftDate.ToShortDateString()</strong> to <strong>Current Laws</strong></span>
-    </div>
+@* Left Pane Header *@
+<div class="pane-header" id="leftHeader" data-fid="TOP" style="padding: 10px; background: #f4f4f4; position: sticky; top: 0; z-index: 10;">
+    Archive: @State.LeftYear
+</div>
+
+@* Right Pane Header *@
+<div class="pane-header" id="rightHeader" data-fid="TOP" style="padding: 10px; background: #f4f4f4; position: sticky; top: 0; z-index: 10;">
+    Current Legislation
 </div>
 
 <div class="diff-container" style="display: flex; height: 80vh; overflow: hidden; background: white;">
@@ -55,27 +55,24 @@ protected override async Task OnInitializedAsync()
     await RefreshData();
 }
 
+protected override void OnInitialized()
+{
+    // Subscribe to the state change event
+    State.OnChange += async () => await RefreshData();
+}
+
 private async Task RefreshData()
 {
-    // In a real scenario, this would fetch different files.
-    // For the mock, we just re-run the hardcoded logic.
-    // LoadMockData();
-    // Let's try this:
+    // Re-filter the MasterNodes based on the NEW year
+    LeftNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, State.LeftYear);
     
-    // Assume MasterNodes is the full XML loaded once at startup
-    var allNodes = State.MasterNodes; 
+    // Always compare against the latest (2026)
+    RightNodes = LegislationParser.GetVersionAtDate(State.MasterNodes, 2026);
 
-    // Left Pane: Project the world as it was in the Slider Year
-    LeftNodes = LegislationParser.GetVersionAtDate(allNodes, State.LeftYear);
-
-    // Right Pane: Project the world as it is today (2026)
-    RightNodes = LegislationParser.GetVersionAtDate(allNodes, 2026);
-
-    // Diff: Compare the two projections
+    // Re-run the DiffEngine to update the Green/Red/Yellow highlights
     DiffResults = DiffEngine.Compare(LeftNodes, RightNodes);
 
-    await Task.CompletedTask;
-    StateHasChanged();
+    StateHasChanged(); // Force the HTML to redraw
 }
 
     private bool IsModified(string fid)
