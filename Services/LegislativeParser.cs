@@ -17,24 +17,33 @@ namespace LegislationTimeMachine.Services
         private List<LegislativeNode> ParseLevel(IEnumerable<XElement> elements)
         {
             var nodes = new List<LegislativeNode>();
-            foreach (var el in elements)
-            {
-                var node = new LegislativeNode
-                {
-                    Fid = el.Attribute(lims + "fid")?.Value,
-                    ElementName = el.Name.LocalName,
-                    Label = el.Element("Label")?.Value,
-                    Content = el.Element("Text")?.Value,
-                    InForceDate = DateTime.TryParse(el.Attribute(lims + "inforce-start-date")?.Value, out var d) ? d : StatuteBaseline
-                };
-                
-                if (el.Elements().Any(e => e.Name.LocalName != "Label" && e.Name.LocalName != "Text"))
-                {
-                    node.Children = ParseLevel(el.Elements().Where(e => e.Name.LocalName != "Label" && e.Name.LocalName != "Text"));
-                }
-                nodes.Add(node);
-            }
-            return nodes;
+    XNamespace lims = "http://justice.gc.ca/lims";
+
+    foreach (var el in elements)
+    {
+        // Skip metadata elements that aren't structural provisions
+        if (el.Name.LocalName == "Label" || el.Name.LocalName == "Text" || el.Name.LocalName == "MarginalNote") 
+            continue;
+
+        var node = new LegislativeNode
+        {
+            Fid = el.Attribute(lims + "fid")?.Value ?? el.Attribute(lims + "id")?.Value,
+            ElementName = el.Name.LocalName,
+            Label = el.Element("Label")?.Value,
+            MarginalNote = el.Element("MarginalNote")?.Value,
+            Content = el.Element("Text")?.Value, 
+            InForceDate = DateTime.TryParse(el.Attribute(lims + "inforce-start-date")?.Value, out var d) ? d : StatuteBaseline
+        };
+
+        // RECURSION: Go deeper into Subsections, Paragraphs, Clauses, etc.
+        if (el.Elements().Any())
+        {
+            node.Children = ParseLevel(el.Elements());
+        }
+
+        nodes.Add(node);
+    }
+    return nodes;
         }
 
         public static List<LegislativeNode> GetVersionAtDate(List<LegislativeNode> masterNodes, int targetYear)
