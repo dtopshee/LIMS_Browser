@@ -1,5 +1,6 @@
 @page "/"
 @inject LegislationTimeMachine.Services.LegislationStateService State
+@inject IJSRuntime JS
 @using LegislationTimeMachine.Models
 @using LegislationTimeMachine.Services
 
@@ -19,19 +20,7 @@
     <div class="pane" id="leftPane" style="flex: 1; overflow-y: auto; border-right: 2px solid #ddd;">
         <h3 style="padding: 10px; background: #f4f4f4; margin: 0;">Archive: @State.LeftYear</h3>
         <Virtualize Items="@LeftNodes" Context="historicalNode">
-            <div class="node-row element-@historicalNode.ElementName @GetChangeClass(historicalNode.Fid)" data-fid="@historicalNode.Fid">
-                @if (!string.IsNullOrEmpty(historicalNode.MarginalNote))
-                {
-                    <span class="marginal-note">@historicalNode.MarginalNote</span>
-                }
-                <span class="node-label">@historicalNode.Label</span>
-                <span class="node-text">@historicalNode.Content</span>
-                
-                @if (historicalNode.Children.Any() && string.IsNullOrEmpty(historicalNode.Content))
-                {
-                    <div class="structural-info"><em>Structure: Subsections exist.</em></div>
-                }
-            </div>
+@RenderNode(historicalNode)
         </Virtualize>
     </div>
 
@@ -167,4 +156,39 @@ private void LoadMockData()
         NewVersion = sectionNew
     };
 }
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender)
+    {
+        await JS.InvokeVoidAsync("syncScroll.init", "leftPane", "rightPane");
+    }
+}
+RenderFragment RenderNode(LegislativeNode node) => __builder =>
+    {
+        <div class="node-row element-@node.ElementName @GetChangeClass(node.Fid)" data-fid="@node.Fid" style="margin-left: @(GetIndent(node.ElementName))px;">
+            @if (!string.IsNullOrEmpty(node.MarginalNote))
+            {
+                <div class="marginal-note">@node.MarginalNote</div>
+            }
+            <span class="node-label">@node.Label</span>
+            <span class="node-text">@node.Content</span>
+
+            @if (node.Children.Any())
+            {
+                <div class="children">
+                    @foreach (var child in node.Children)
+                    {
+                        @RenderNode(child)
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private int GetIndent(string name) => name switch {
+        "Subsection" => 20,
+        "Paragraph" => 40,
+        "Clause" => 60,
+        _ => 0
+    };
 }
