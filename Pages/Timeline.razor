@@ -4,20 +4,20 @@
 @using LegislationTimeMachine.Models
 @using LegislationTimeMachine.Services
 
-@* Left Pane Header *@
-<div class="pane-header" id="leftHeader" data-fid="TOP" style="padding: 10px; background: #f4f4f4; position: sticky; top: 0; z-index: 10;">
-    Archive: @State.LeftYear
-</div>
 
-@* Right Pane Header *@
-<div class="pane-header" id="rightHeader" data-fid="TOP" style="padding: 10px; background: #f4f4f4; position: sticky; top: 0; z-index: 10;">
-    Current Legislation
-</div>
+<div class="timeline-header" style="padding: 20px; background: #eee; border-bottom: 1px solid #ccc;">
+    <div class="slider-controls">
+        <label>Historical Snapshot (Year): @State.LeftYear</label>
+        <input type="range" min="2003" max="2026" @bind-value="State.LeftYear" @bind-value:event="oninput" style="width: 100%;" />
+    </div>
+    <div class="metadata">
+        <span>Comparing <strong>@State.LeftDate.ToShortDateString()</strong> to <strong>Current Laws</strong></span>
+    </div>
 
 <div class="diff-container" style="display: flex; height: 80vh; overflow: hidden; background: white;">
     
     @* Left Pane: Historical View *@
-    <div class="pane" id="leftPane" style="flex: 1; overflow-y: auto; border-right: 2px solid #ddd;">
+    <div class="pane" data-fid="TOP" id="leftPane" style="flex: 1; overflow-y: auto; border-right: 2px solid #ddd;">
         <h3 style="padding: 10px; background: #f4f4f4; margin: 0; position: sticky; top: 0; z-index: 10;">
             Archive: @State.LeftYear
         </h3>
@@ -27,7 +27,7 @@
     </div>
 
     @* Right Pane: Current View *@
-    <div class="pane" id="rightPane" style="flex: 1; overflow-y: auto;">
+    <div class="pane" id="rightPane" data-fid="TOP" style="flex: 1; overflow-y: auto;">
         <h3 style="padding: 10px; background: #f4f4f4; margin: 0; position: sticky; top: 0; z-index: 10;">
             Current Legislation
         </h3>
