@@ -4,6 +4,17 @@
 @using LegislationTimeMachine.Models
 @using LegislationTimeMachine.Services
 
+<div class="act-selector" style="padding: 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; align-items: center; gap: 20px;">
+    <strong>Active Act:</strong>
+    <select class="form-select" @onchange="OnActSelected" style="padding: 5px; border-radius: 4px;">
+        <option value="">-- Choose Legislation --</option>
+        @foreach (var act in State.AvailableActs)
+        {
+            <option value="@act.FileName">@act.ShortTitle</option>
+        }
+    </select>
+    <span>Year: <strong>@State.LeftYear</strong></span>
+</div>
 
 <div class="timeline-header" style="padding: 20px; background: #eee; border-bottom: 1px solid #ccc;">
     <div class="slider-controls">
@@ -44,17 +55,22 @@
     private Dictionary<string, LegislativeDelta> DiffResults = new();
 
 protected override async Task OnInitializedAsync()
-{
-    State.OnChange += StateHasChanged;
-    
-    // If for some reason it's not loaded yet, load it now
-    if (!State.MasterNodes.Any())
     {
-        await State.InitializeAsync();
+        State.OnChange += async () => await RefreshData();
+        await State.LoadAvailableActsAsync();
+        
+        // Default to Privacy Act on first load
+        await State.LoadNewActAsync("PrivacyAct.xml");
     }
 
-    await RefreshData();
-}
+    private async Task OnActSelected(ChangeEventArgs e)
+    {
+        var file = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(file))
+        {
+            await State.LoadNewActAsync(file);
+        }
+    }
 
 protected override void OnInitialized()
 {
