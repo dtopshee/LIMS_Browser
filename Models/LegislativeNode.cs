@@ -39,10 +39,5 @@ namespace LegislationTimeMachine.Models
         }
     }
 
-    /// <summary>
-    /// Represents a change detected between two points in time for a single FID.
-    /// </summary>
-    public enum ChangeType { Added, Modified, Removed, Unchanged }
-
- 
+  
 }
