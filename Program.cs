@@ -18,9 +18,15 @@ builder.Services.AddSingleton<LegislationStateService>();
 
 //await builder.Build().RunAsync();
 
+// In Program.cs
 var host = builder.Build();
 
 var stateService = host.Services.GetRequiredService<LegislationStateService>();
-await stateService.InitializeAsync();
+
+// 1. Load the manifest first
+await stateService.LoadAvailableActsAsync();
+
+// 2. Load the default Act (Privacy Act)
+await stateService.LoadNewActAsync("PrivacyAct.xml");
 
 await host.RunAsync();
