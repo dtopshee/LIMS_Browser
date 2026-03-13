@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "LegislationTimeMachine",
   "resources": {
-    "hash": "sha256-pPVWXQf9/0gGQu2gm0bPDP2o7Gka/dyyZaYpWSQu6m8=",
+    "hash": "sha256-z/hVPnGUAkJWxFDZxElOf1OuclkOJ5lwnO8EBa7j9v4=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-NljIbpK/1KCj0+knpX8U77Rbl5kTtfFIuFjK7AuczEw="
     },
@@ -56,7 +56,7 @@
       "System.Xml.Linq.wasm": "sha256-nwHzgtzD6tHgiChE/s3UlI4LwkgdwknL6ZTgkJheYek=",
       "System.Xml.XDocument.wasm": "sha256-N81wMm8PHbSpcz26kHK0LWscermP51VEGZbZFlRfPWo=",
       "System.Private.CoreLib.wasm": "sha256-UyuKkWfJg9jgLE3x3c2bToiRv5zsnhPKH19jADbibIY=",
-      "LegislationTimeMachine.wasm": "sha256-xcDN90fgg86KpS+V0/QlJOoUx5mT/XbQlz78GfgTAAQ="
+      "LegislationTimeMachine.wasm": "sha256-9vu1TYMWiJGR4TeCRCx03k5GvNno+UCTVlAH6KMioBU="
     }
   },
   "cacheBootResources": true,
