@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using LegislationTimeMachine.Models;
 
@@ -6,20 +12,27 @@ namespace LegislationTimeMachine.Services
     public class LegislationStateService
     {
         private readonly HttpClient _http;
+        private int _leftYear = 2003;
+
         public List<LegislativeNode> MasterNodes { get; private set; } = new();
+        public List<LegislationFileInfo> AvailableActs { get; private set; } = new();
+        public string CurrentActTitle { get; private set; } = "Select Legislation";
         public bool IsLoading { get; private set; } = false;
 
+        // Date state for the Time Machine
         public DateTime LeftDate { get; set; } = new DateTime(2003, 1, 1);
         public DateTime RightDate { get; set; } = DateTime.Now;
 
-        private int _leftYear = 2003;
-        public int LeftYear 
-        { 
-            get => _leftYear; 
-            set {
-                if (_leftYear != value) {
+        public int LeftYear
+        {
+            get => _leftYear;
+            set
+            {
+                if (_leftYear != value)
+                {
                     _leftYear = value;
-                    NotifyStateChanged(); // This "pings" the Timeline.razor page
+                    LeftDate = new DateTime(value, 1, 1);
+                    NotifyStateChanged();
                 }
             }
         }
@@ -31,26 +44,55 @@ namespace LegislationTimeMachine.Services
             _http = http;
         }
 
-        public async Task InitializeAsync()
+        public async Task LoadAvailableActsAsync()
         {
-            if (MasterNodes.Any() || IsLoading) return;
+            try
+            {
+                // Fetches the manifest list from wwwroot/data/manifest.json
+                var fileNames = await _http.GetFromJsonAsync<List<string>>("data/manifest.json");
+                AvailableActs.Clear();
+
+                if (fileNames != null)
+                {
+                    foreach (var name in fileNames)
+                    {
+                        AvailableActs.Add(new LegislationFileInfo 
+                        { 
+                            FileName = name, 
+                            ShortTitle = name.Replace(".xml", "").Replace("Act", " Act") 
+                        });
+                    }
+                }
+                NotifyStateChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading manifest: {ex.Message}");
+            }
+        }
+
+        public async Task LoadNewActAsync(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return;
 
             IsLoading = true;
             NotifyStateChanged();
 
             try
             {
-                // Ensure this matches your filename in wwwroot/data/
-                //var xmlString = await _http.GetStringAsync("data/criminal-code-recent.xml");
-                var xmlString = await _http.GetStringAsync("data/P-21.xml");
+                var xmlString = await _http.GetStringAsync($"data/{fileName}");
                 var doc = XDocument.Parse(xmlString);
+
+                // Extract ShortTitle using the 2002 schema pattern
+                CurrentActTitle = doc.Descendants("ShortTitle").FirstOrDefault()?.Value 
+                                  ?? fileName.Replace(".xml", "");
 
                 var parser = new LegislationParser();
                 MasterNodes = parser.ParseToTree(doc);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Critical Error loading XML: {ex.Message}");
+                Console.WriteLine($"Critical Error switching acts: {ex.Message}");
             }
             finally
             {
@@ -61,47 +103,4 @@ namespace LegislationTimeMachine.Services
 
         private void NotifyStateChanged() => OnChange?.Invoke();
     }
-
-    public List<LegislationFileInfo> AvailableActs { get; private set; } = new();
-public string CurrentActTitle { get; private set; } = "Select Legislation";
-
-public async Task LoadAvailableActsAsync()
-{
-    var fileNames = await _http.GetFromJsonAsync<List<string>>("data/manifest.json");
-    AvailableActs.Clear();
-
-    foreach (var name in fileNames ?? new())
-    {
-        // For a quick scan, we just use the name; we can extract ShortTitle later
-        AvailableActs.Add(new LegislationFileInfo { FileName = name, ShortTitle = name.Replace(".xml", "") });
-    }
-    NotifyStateChanged();
-}
-
-public async Task LoadNewActAsync(string fileName)
-{
-    IsLoading = true;
-    NotifyStateChanged();
-
-    try
-    {
-        var xmlString = await _http.GetStringAsync($"data/{fileName}");
-        var doc = XDocument.Parse(xmlString);
-        
-        // Extract the actual ShortTitle from the XML for the UI
-        CurrentActTitle = doc.Descendants("ShortTitle").FirstOrDefault()?.Value ?? fileName;
-
-        var parser = new LegislationParser();
-        MasterNodes = parser.ParseToTree(doc);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error switching acts: {ex.Message}");
-    }
-    finally
-    {
-        IsLoading = false;
-        NotifyStateChanged();
-    }
-}
 }
