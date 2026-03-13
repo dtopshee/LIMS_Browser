@@ -196,24 +196,41 @@ protected override async Task OnAfterRenderAsync(bool firstRender)
 
 RenderFragment RenderNode(LegislativeNode node) => __builder =>
     {
+        // Determine if this specific provision is repealed at the selected point in time
+        var isRepealed = node.RepealDate.HasValue && node.RepealDate.Value.Year <= State.LeftYear;
         var changeClass = GetChangeClass(node.Fid);
 
-        <div class="node-row @changeClass" data-fid="@node.Fid" 
-             style="margin-left: @(GetIndent(node.ElementName))px; padding: 8px 0;">
+        <div class="node-row @(isRepealed ? "diff-removed" : changeClass)" 
+             data-fid="@node.Fid" 
+             style="margin-left: @(GetIndent(node.ElementName))px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
             
+            @* 1. Render the Marginal Note (if it exists at this level) *@
             @if (!string.IsNullOrEmpty(node.MarginalNote))
             {
-                <div class="marginal-note" style="color: #003366; font-size: 0.75rem; font-weight: bold; font-style: italic; margin-bottom: 2px;">
+                <div class="marginal-note" style="color: #003366; font-size: 0.75rem; font-weight: bold; margin-bottom: 2px;">
                     @node.MarginalNote
                 </div>
             }
 
-            <div style="display: flex; gap: 10px;">
-                <span class="node-label" style="font-weight: bold; min-width: 35px;">@node.Label</span>
-                <span class="node-text">@node.Content</span>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                @* 2. Render the Label (e.g., "8" or "(1)") *@
+                <span class="node-label" style="font-weight: bold; min-width: 35px; color: #444;">@node.Label</span>
+                
+                @* 3. Conditional Content: Show Repeal Marker OR the Actual Text *@
+                @if (isRepealed)
+                {
+                    <span class="repeal-text" style="color: #d73a49; font-style: italic; font-weight: 500;">
+                        [Repealed @node.RepealDate.Value.Year]
+                    </span>
+                }
+                else
+                {
+                    <span class="node-text">@node.Content</span>
+                }
             </div>
 
-            @if (node.Children.Any())
+            @* 4. Recursion: Render children (Subsections, Paragraphs) *@
+            @if (node.Children != null && node.Children.Any())
             {
                 <div class="node-children">
                     @foreach (var child in node.Children)
