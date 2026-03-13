@@ -74,8 +74,21 @@ private async Task RefreshData()
 {
     // In a real scenario, this would fetch different files.
     // For the mock, we just re-run the hardcoded logic.
-    LoadMockData();
+    // LoadMockData();
+    // Let's try this:
     
+    // Assume MasterNodes is the full XML loaded once at startup
+    var allNodes = State.MasterNodes; 
+
+    // Left Pane: Project the world as it was in the Slider Year
+    LeftNodes = LegislationParser.GetVersionAtDate(allNodes, State.LeftYear);
+
+    // Right Pane: Project the world as it is today (2026)
+    RightNodes = LegislationParser.GetVersionAtDate(allNodes, 2026);
+
+    // Diff: Compare the two projections
+    DiffResults = DiffEngine.Compare(LeftNodes, RightNodes);
+
     await Task.CompletedTask;
     StateHasChanged();
 }
